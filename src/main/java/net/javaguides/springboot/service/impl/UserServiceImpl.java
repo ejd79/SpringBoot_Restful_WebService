@@ -3,6 +3,8 @@ package net.javaguides.springboot.service.impl;
 import lombok.AllArgsConstructor;
 import net.javaguides.springboot.dto.UserDto;
 import net.javaguides.springboot.entity.User;
+import net.javaguides.springboot.exception.EmailAlreadyExistsException;
+import net.javaguides.springboot.exception.ResourceNotFoundException;
 import net.javaguides.springboot.mapper.AutoUserMapper;
 import net.javaguides.springboot.mapper.UserMapper;
 import net.javaguides.springboot.repository.UserRepository;
@@ -25,8 +27,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto createUser(UserDto userDto) {
         //User savedUser = userRepository.save(UserMapper.maptoUser(userDto));
-//        User savedUser = userRepository.save(modelMapper.map(userDto, User.class));
-        User savedUser = userRepository.save(AutoUserMapper.MAPPER.mapToUser(userDto));
+
+        Optional<User> optionalUser = userRepository.findByEmail(userDto.getEmail());
+
+        if (optionalUser.isPresent()){
+            throw new EmailAlreadyExistsException("Email already exists for User");
+        }
+
+        User savedUser = userRepository.save(modelMapper.map(userDto, User.class));
+
         return UserMapper.mapToUserDto(savedUser);
     }
 
@@ -40,12 +49,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getUserById(int id) {
-        Optional<User> savedUser = userRepository.findById(id);
+    public UserDto getUserById(Long userId) {
+        User savedUser = userRepository.findById(Math.toIntExact(userId)).orElseThrow(
+                () -> new ResourceNotFoundException("User", "id", userId)
+        );
 //        return UserMapper.mapToUserDto(savedUser.get());
-        return modelMapper.map(savedUser.get(), UserDto.class);
+        return modelMapper.map(savedUser, UserDto.class);
+//        return AutoUserMapper.MAPPER.mapToUserDto(savedUser);
     }
-
 
 
 }

@@ -58,5 +58,17 @@ public class UserServiceImpl implements UserService {
 //        return AutoUserMapper.MAPPER.mapToUserDto(savedUser);
     }
 
+    @Override
+    public UserDto updateUser(UserDto userDto) {
+        User user = userRepository.findById(userDto.getId().intValue()).orElseThrow(
+                () -> new ResourceNotFoundException("User", "id", userDto.getId())
+        );
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+        user.setEmail(userDto.getEmail());
+        User savedUser = userRepository.save(user);
+        return modelMapper.map(savedUser, UserDto.class);
+    }
+
 
 }
